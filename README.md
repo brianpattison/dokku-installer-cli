@@ -1,26 +1,20 @@
 # DokkuInstallerCli
 
-TODO: Write a gem description
+Command line tool for Dokku Installer.
 
 ## Installation
 
 Add this line to your application's Gemfile:
 
-```ruby
-gem 'dokku_installer_cli'
+```bash
+$ gem install dokku-installer-cli
 ```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install dokku_installer_cli
 
 ## Usage
 
-TODO: Write usage instructions here
+```bash
+$ dokku config
+```
 
 ## Contributing
 

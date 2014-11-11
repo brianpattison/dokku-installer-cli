@@ -1,76 +1,96 @@
 #!/usr/bin/env ruby
 
-require "optparse"
-require "methadone"
-require "dokku_installer_cli.rb"
+require "thor"
 
-class App
-  include Methadone::Main
-  include Methadone::CLILogging
+module DokkuInstaller
+  class Cli < Thor
 
-  main do |command, *args|
-    git_config = File.join(Dir.pwd, ".git", "config")
-    exit unless File.exist?(git_config)
-
-    git_config = File.read(git_config)
-    match = git_config.match(/url \= dokku@(.*):(.*)\n/).to_a
-    exit unless match
-
-    domain = match[1]
-    app_name = match[2]
-
-    dokku_command = "ssh -t dokku@#{domain} "
-
-    case command
-    when "config"
-      dokku_command += "config #{app_name}"
-    when "config:get"
-      dokku_command += "config:get #{app_name} #{args.first}"
-    when "config:set"
-      dokku_command += "config:set #{app_name} #{args.join(' ')}"
-    when "config:unset"
-      dokku_command += "config:unset #{app_name} #{args.join(' ')}"
-    when "create"
-      dokku_command += "create #{args.first}"
-    when "domains"
-      dokku_command += "domains #{app_name}"
-    when "domains:set"
-      dokku_command += "domains:set #{app_name} #{args.join(' ')}"
-    when "logs"
-      dokku_command += "logs #{app_name} #{args.join(' ')}"
-    when "run"
-      command = args.join(" ")
-      dokku_command += "run #{app_name} #{command}"
-    else
-      exit
+    desc "config", "config"
+    def config
+      run_command "config #{app_name}"
     end
 
-    puts "Running #{dokku_command}..."
-    exec(dokku_command)
+    desc "config:get", "config:get"
+    def config_get(*args)
+      run_command "config:get #{app_name} #{args.first}"
+    end
+
+    desc "config:set", "config:set"
+    def config_set(*args)
+      run_command "config:set #{app_name} #{args.join(' ')}"
+    end
+
+    desc "config:unset", "config:unset"
+    def config_unset(*args)
+      run_command "config:unset #{app_name} #{args.join(' ')}"
+    end
+
+    desc "create", "create"
+    def create(*args)
+      run_command "create #{args.first}"
+    end
+
+    desc "domains", "domains"
+    def domains(*args)
+      run_command "domains #{app_name}"
+    end
+
+    desc "domains:set", "domains:set"
+    def domains_set(*args)
+      run_command "domains:set #{app_name} #{args.join(' ')}"
+    end
+
+    desc "logs", "logs"
+    def logs(*args)
+      run_command "logs #{app_name} #{args.join(' ')}"
+    end
+
+    desc "run", "run"
+    def app_run(*args)
+      run_command "run #{app_name} #{args.join(' ')}"
+    end
+
+    def method_missing(method, *args, &block)
+      method = method.to_s
+      if method.split(":").length == 2
+        self.send(method.gsub(":", "_"), *args)
+      elsif method == "run"
+        self.app_run(*args)
+      else
+        super
+      end
+    end
+
+  private
+
+    def app_name
+      @app_name ||= git_config_match[2]
+    end
+
+    def domain
+      @domain ||= git_config_match[1]
+    end
+
+    def git_config_match
+      @git_config_match ||= begin
+        git_config = File.join(Dir.pwd, ".git", "config")
+        exit unless File.exist?(git_config)
+
+        git_config = File.read(git_config)
+        match = git_config.match(/url \= dokku@(.*):(.*)\n/).to_a
+        exit unless match
+
+        match
+      end
+    end
+
+    def run_command(command)
+      dokku_command = "ssh -t dokku@#{domain} #{command}"
+
+      puts "Running #{dokku_command}..."
+      exec(dokku_command)
+    end
   end
-
-  description "Command line tool for Dokku Installer"
-
-  arg :command
-  #
-  # Accept flags via:
-  # on("--flag VAL","Some flag")
-  # options[flag] will contain VAL
-  #
-  # Specify switches via:
-  # on("--[no-]switch","Some switch")
-  #
-  # Or, just call OptionParser methods on opts
-  #
-  # Require an argument
-  # arg :some_arg
-  #
-  # # Make an argument optional
-  # arg :optional_arg, :optional
-
-  version DokkuInstallerCli::VERSION
-
-  use_log_level_option :toggle_debug_on_signal => "USR1"
-
-  go!
 end
+
+DokkuInstaller::Cli.start(ARGV)
