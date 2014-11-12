@@ -5,57 +5,66 @@ require "thor"
 module DokkuInstaller
   class Cli < Thor
 
-    desc "config", "config"
+    desc "config", "Display the app's environment variables"
     def config
       run_command "config #{app_name}"
     end
 
-    desc "config:get", "config:get"
+    desc "config:get KEY", "Display an environment variable value"
     def config_get(*args)
       run_command "config:get #{app_name} #{args.first}"
     end
 
-    desc "config:set", "config:set"
+    desc "config:set KEY1=VALUE1 [KEY2=VALUE2 ...]", "Set one or more environment variables"
     def config_set(*args)
       run_command "config:set #{app_name} #{args.join(' ')}"
     end
 
-    desc "config:unset", "config:unset"
+    desc "config:unset KEY1 [KEY2 ...]", "Unset one or more environment variables"
     def config_unset(*args)
       run_command "config:unset #{app_name} #{args.join(' ')}"
     end
 
-    desc "create", "create"
-    def create(*args)
-      run_command "create #{args.first}"
-    end
+    # desc "create", "Create an app"
+    # def create(*args)
+    #   run_command "create #{args.first}"
+    # end
 
-    desc "domains", "domains"
+    desc "domains", "Display the app's domains"
     def domains(*args)
       run_command "domains #{app_name}"
     end
 
-    desc "domains:set", "domains:set"
+    desc "domains:set DOMAIN1 [DOMAIN2 ...]", "Set one or more domains"
     def domains_set(*args)
       run_command "domains:set #{app_name} #{args.join(' ')}"
     end
 
-    desc "logs", "logs"
+    desc "logs [-t]", "Show the last logs for the application (-t follows)"
     def logs(*args)
       run_command "logs #{app_name} #{args.join(' ')}"
     end
 
-    desc "run", "run"
-    def app_run(*args)
+    desc "run <cmd>", "Run a command in the environment of an application"
+    def walk(*args)
       run_command "run #{app_name} #{args.join(' ')}"
     end
 
+    desc "version", "Print dokku-installer-cli's version"
+    def version
+      puts "Dokku Installer CLI #{DokkuInstaller::VERSION}"
+    end
+
+    def help(method = nil)
+      method = "walk" if method == "run"
+      super
+    end
+
     def method_missing(method, *args, &block)
-      method = method.to_s
-      if method.split(":").length == 2
-        self.send(method.gsub(":", "_"), *args)
-      elsif method == "run"
-        self.app_run(*args)
+      if method.to_s.split(":").length == 2
+        self.send(method.to_s.gsub(":", "_"), *args)
+      elsif method == :run
+        self.walk(*args)
       else
         super
       end

@@ -1,4 +1,4 @@
-# DokkuInstallerCli
+# Dokku Installer CLI
 
 Command line tool for Dokku Installer.
 
@@ -13,7 +13,19 @@ $ gem install dokku-installer-cli
 ## Usage
 
 ```bash
-$ dokku config
+$ dokku help
+
+Commands:
+  dokku config                                    # Display the app's environment variables
+  dokku config:get KEY                            # Display an environment variable value
+  dokku config:set KEY1=VALUE1 [KEY2=VALUE2 ...]  # Set one or more environment variables
+  dokku config:unset KEY1 [KEY2 ...]              # Unset one or more environment variables
+  dokku domains                                   # Display the app's domains
+  dokku domains:set DOMAIN1 [DOMAIN2 ...]         # Set one or more domains
+  dokku help [COMMAND]                            # Describe available commands or one specific command
+  dokku logs [-t]                                 # Show the last logs for the application (-t follows)
+  dokku run <cmd>                                 # Run a command in the environment of an application
+  dokku version                                   # Print dokku-installer-cli's version
 ```
 
 ## Contributing
