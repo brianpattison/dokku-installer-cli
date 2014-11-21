@@ -40,12 +40,17 @@ module DokkuInstaller
       run_command "logs #{app_name} #{args.join(' ')}"
     end
 
+    desc "open", "Open the application in your default browser"
+    def open
+      exec("open http://#{app_name}.#{domain}")
+    end
+
     desc "restart", "Restart the application"
     def restart(*args)
       run_command "restart #{app_name}"
     end
 
-    desc "run <cmd>", "Run a command in the environment of an application"
+    desc "run <cmd>", "Run a command in the environment of the application"
     def walk(*args)
       run_command "run #{app_name} #{args.join(' ')}"
     end
@@ -70,7 +75,12 @@ module DokkuInstaller
       exec(dokku_command)
     end
 
-    desc "version", "Print dokku-installer-cli's version"
+    desc "url", "Show the URL for the application"
+    def url
+      puts "http://#{app_name}.#{domain}"
+    end
+
+    desc "version", "Show dokku-installer-cli's version"
     def version
       puts "Dokku Installer CLI #{DokkuInstaller::VERSION}"
     end
