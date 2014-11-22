@@ -37,7 +37,13 @@ module DokkuInstaller
 
     desc "logs [-t]", "Show the last logs for the application (-t follows)"
     def logs(*args)
-      run_command "logs #{app_name} #{args.join(' ')}"
+      if args.first && args.first.strip == "-t"
+        command = "ssh dokku@#{domain} logs #{app_name} -t"
+        puts "Running #{command}..."
+        exec(command)
+      else
+        run_command "logs #{app_name}"
+      end
     end
 
     desc "open", "Open the application in your default browser"
@@ -52,7 +58,15 @@ module DokkuInstaller
 
     desc "run <cmd>", "Run a command in the environment of the application"
     def walk(*args)
-      run_command "run #{app_name} #{args.join(' ')}"
+      command = "#{args.join(' ')}"
+      case command.gsub(" ", "")
+      when "rakedb:drop"
+        puts "You cannot use `rake db:drop`. Use Dokku directly to delete the database."
+      when "rakedb:create"
+        puts "You cannot use `rake db:create`. Use Dokku directly to create the database."
+      else
+        run_command "run #{app_name} #{command}"
+      end
     end
 
     desc "ssl:certificate <file path>", "Add a signed certificate for SSL (server.crt)"
