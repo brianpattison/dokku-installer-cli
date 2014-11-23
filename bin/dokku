@@ -2,6 +2,7 @@
 
 require "shellwords"
 require "thor"
+require "YAML"
 
 module DokkuInstaller
   class Cli < Thor
@@ -78,21 +79,9 @@ module DokkuInstaller
 
     desc "postgres:backups:download <number>", "Download the numbered PostgreSQL backup"
     def postgres_backups_download(*args)
-      # Make sure the number is valid
       number = args.first ? args.first : 1
-      number = number.to_s.gsub(/\D/, "").to_i
-      if number < 1
-        puts "Invalid backup number"
-        return
-      end
 
-      # Get the file name for the numbered backup
-      puts "Getting list of backups..."
-      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
-      backups = `#{command}`
-      index = number - 1
-      backup = backups.split("\n").reverse[index].strip
-      if backup
+      if backup = backup_filename(number)
         command = "postgres:backups:download #{app_name} #{backup} > #{backup}"
         puts "Saving to local file: #{backup}"
         run_command(command)
@@ -104,6 +93,28 @@ module DokkuInstaller
     desc "postgres:backups:enable", "Enable daily PostgreSQL backups"
     def postgres_backups_enable
       run_command "postgres:backups:enable #{app_name}"
+    end
+
+    desc "postgres:backups:restore:local <number>", "Restore the numbered PostgreSQL backup locally"
+    def postgres_backups_restore_local(*args)
+      # Download the backup file
+      number = args.first ? args.first : 1
+
+      if backup = backup_filename(number)
+        command = "ssh -t dokku@#{domain} postgres:backups:download #{app_name} #{backup} > #{backup}"
+        puts "Saving to local file: #{backup}"
+        `#{command}`
+
+        if psql_options
+          command = "psql #{psql_options} --file=#{backup}"
+          puts "Running #{command}..."
+          `#{command}`
+          puts "Deleting #{backup}..."
+          `rm #{backup}`
+        end
+      else
+        puts "Invalid backup number"
+      end
     end
 
     desc "restart", "Restart the application"
@@ -175,6 +186,23 @@ module DokkuInstaller
       @app_name ||= git_config_match[2]
     end
 
+    def backup_filename(number)
+      # Make sure the number is valid or use 1
+      number = number.to_s.gsub(/\D/, "").to_i
+      number = 1 if number < 1
+
+      # Get the file name for the numbered backup
+      puts "Getting list of backups..."
+      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
+      backups = `#{command}`
+      index = number - 1
+      if filename = backups.split("\n").reverse[index]
+        filename.strip
+      else
+        nil
+      end
+    end
+
     def domain
       @domain ||= git_config_match[1]
     end
@@ -189,6 +217,32 @@ module DokkuInstaller
         exit unless match
 
         match
+      end
+    end
+
+    def psql_options
+      @psql_options ||= begin
+        restore_options = nil
+
+        if File.exist?("./config/database.yml")
+          if development_config = YAML::load(IO.read("./config/database.yml"))["development"]
+            restore_options = "--host=#{development_config['host']} --dbname=#{development_config['database']}"
+
+            if username = development_config["username"]
+              restore_options += " --username=#{username}"
+            end
+
+            if port = development_config["port"]
+              restore_options += " --port=#{port}"
+            end
+          else
+            puts "Missing database.yml config for development environment"
+          end
+        else
+          puts "Missing file config/database.yml"
+        end
+
+        restore_options
       end
     end
 
