@@ -12,7 +12,7 @@ $ gem install dokku-installer-cli
 
 ## Usage
 
-```bash
+```
 $ dokku help
 
 Commands:
