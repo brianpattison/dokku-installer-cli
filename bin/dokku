@@ -1,5 +1,6 @@
 #!/usr/bin/env ruby
 
+require "shellwords"
 require "thor"
 
 module DokkuInstaller
@@ -49,6 +50,60 @@ module DokkuInstaller
     desc "open", "Open the application in your default browser"
     def open
       exec("open http://#{app_name}.#{domain}")
+    end
+
+    desc "postgres:backups", "List available PostgreSQL backups"
+    def postgres_backups
+      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
+      puts "Running #{command}..."
+      backups = `#{command}`
+      backups.split("\n").reverse.each_with_index do |line, index|
+        number = "#{index + 1}"
+        if number.length < 2
+          number = " #{number}"
+        end
+        puts "#{number}. #{line}"
+      end
+    end
+
+    desc "postgres:backups:create", "Create a new PostgreSQL backup"
+    def postgres_backups_create
+      run_command "postgres:backups:create #{app_name}"
+    end
+
+    desc "postgres:backups:disable", "Disable daily PostgreSQL backups"
+    def postgres_backups_disable
+      run_command "postgres:backups:disable #{app_name}"
+    end
+
+    desc "postgres:backups:download <number>", "Download the numbered PostgreSQL backup"
+    def postgres_backups_download(*args)
+      # Make sure the number is valid
+      number = args.first ? args.first : 1
+      number = number.to_s.gsub(/\D/, "").to_i
+      if number < 1
+        puts "Invalid backup number"
+        return
+      end
+
+      # Get the file name for the numbered backup
+      puts "Getting list of backups..."
+      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
+      backups = `#{command}`
+      index = number - 1
+      backup = backups.split("\n").reverse[index].strip
+      if backup
+        command = "postgres:backups:download #{app_name} #{backup} > #{backup}"
+        puts "Saving to local file: #{backup}"
+        run_command(command)
+      else
+        puts "Invalid backup number"
+      end
+    end
+
+    desc "postgres:backups:enable", "Enable daily PostgreSQL backups"
+    def postgres_backups_enable
+      run_command "postgres:backups:enable #{app_name}"
     end
 
     desc "restart", "Restart the application"
@@ -105,7 +160,7 @@ module DokkuInstaller
     end
 
     def method_missing(method, *args, &block)
-      if method.to_s.split(":").length == 2
+      if method.to_s.split(":").length >= 2
         self.send(method.to_s.gsub(":", "_"), *args)
       elsif method == :run
         self.walk(*args)
