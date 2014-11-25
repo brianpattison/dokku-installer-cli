@@ -33,6 +33,7 @@ Commands:
   dokku postgres:backups:restore:local <number>   # Restore the numbered PostgreSQL backup locally
   dokku restart                                   # Restart the application
   dokku run <cmd>                                 # Run a command in the environment of the application
+  dokku ssh                                       # Start an SSH session as root user
   dokku ssl:certificate <file path>               # Add a signed certificate for SSL (server.crt)
   dokku ssl:key <file path>                       # Add a private key for SSL (server.key)
   dokku url                                       # Show the URL for the application
