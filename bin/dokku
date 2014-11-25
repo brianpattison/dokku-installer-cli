@@ -1,41 +1,11 @@
 #!/usr/bin/env ruby
 
-require "shellwords"
 require "thor"
 require "YAML"
+require_relative "../lib/dokku_installer"
 
 module DokkuInstaller
   class Cli < Thor
-
-    desc "config", "Display the app's environment variables"
-    def config
-      run_command "config #{app_name}"
-    end
-
-    desc "config:get KEY", "Display an environment variable value"
-    def config_get(*args)
-      run_command "config:get #{app_name} #{args.first}"
-    end
-
-    desc "config:set KEY1=VALUE1 [KEY2=VALUE2 ...]", "Set one or more environment variables"
-    def config_set(*args)
-      run_command "config:set #{app_name} #{args.join(' ')}"
-    end
-
-    desc "config:unset KEY1 [KEY2 ...]", "Unset one or more environment variables"
-    def config_unset(*args)
-      run_command "config:unset #{app_name} #{args.join(' ')}"
-    end
-
-    desc "domains", "Display the app's domains"
-    def domains(*args)
-      run_command "domains #{app_name}"
-    end
-
-    desc "domains:set DOMAIN1 [DOMAIN2 ...]", "Set one or more domains"
-    def domains_set(*args)
-      run_command "domains:set #{app_name} #{args.join(' ')}"
-    end
 
     desc "logs [-t]", "Show the last logs for the application (-t follows)"
     def logs(*args)
@@ -51,70 +21,6 @@ module DokkuInstaller
     desc "open", "Open the application in your default browser"
     def open
       exec("open http://#{app_name}.#{domain}")
-    end
-
-    desc "postgres:backups", "List available PostgreSQL backups"
-    def postgres_backups
-      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
-      puts "Running #{command}..."
-      backups = `#{command}`
-      backups.split("\n").reverse.each_with_index do |line, index|
-        number = "#{index + 1}"
-        if number.length < 2
-          number = " #{number}"
-        end
-        puts "#{number}. #{line}"
-      end
-    end
-
-    desc "postgres:backups:create", "Create a new PostgreSQL backup"
-    def postgres_backups_create
-      run_command "postgres:backups:create #{app_name}"
-    end
-
-    desc "postgres:backups:disable", "Disable daily PostgreSQL backups"
-    def postgres_backups_disable
-      run_command "postgres:backups:disable #{app_name}"
-    end
-
-    desc "postgres:backups:download <number>", "Download the numbered PostgreSQL backup"
-    def postgres_backups_download(*args)
-      number = args.first ? args.first : 1
-
-      if backup = backup_filename(number)
-        command = "postgres:backups:download #{app_name} #{backup} > #{backup}"
-        puts "Saving to local file: #{backup}"
-        run_command(command)
-      else
-        puts "Invalid backup number"
-      end
-    end
-
-    desc "postgres:backups:enable", "Enable daily PostgreSQL backups"
-    def postgres_backups_enable
-      run_command "postgres:backups:enable #{app_name}"
-    end
-
-    desc "postgres:backups:restore:local <number>", "Restore the numbered PostgreSQL backup locally"
-    def postgres_backups_restore_local(*args)
-      # Download the backup file
-      number = args.first ? args.first : 1
-
-      if backup = backup_filename(number)
-        command = "ssh -t dokku@#{domain} postgres:backups:download #{app_name} #{backup} > #{backup}"
-        puts "Saving to local file: #{backup}"
-        `#{command}`
-
-        if psql_options
-          command = "psql #{psql_options} --file=#{backup}"
-          puts "Running #{command}..."
-          `#{command}`
-          puts "Deleting #{backup}..."
-          `rm #{backup}`
-        end
-      else
-        puts "Invalid backup number"
-      end
     end
 
     desc "restart", "Restart the application"
@@ -138,26 +44,6 @@ module DokkuInstaller
     desc "ssh", "Start an SSH session as root user"
     def ssh
       command = "ssh root@#{domain}"
-      puts "Running #{command}..."
-      exec(command)
-    end
-
-    desc "ssl:certificate <file path>", "Add a signed certificate for SSL (server.crt)"
-    def ssl_certificate(*args)
-      file_path = args.first
-      file_contents = File.read(file_path)
-      command = "echo \"#{file_contents}\" | ssh dokku@#{domain} ssl:certificate #{app_name}"
-
-      puts "Running #{command}..."
-      exec(command)
-    end
-
-    desc "ssl:key <file path>", "Add a private key for SSL (server.key)"
-    def ssl_key(*args)
-      file_path = args.first
-      file_contents = File.read(file_path)
-      command = "echo \"#{file_contents}\" | ssh dokku@#{domain} ssl:key #{app_name}"
-
       puts "Running #{command}..."
       exec(command)
     end
@@ -224,32 +110,6 @@ module DokkuInstaller
         exit unless match
 
         match
-      end
-    end
-
-    def psql_options
-      @psql_options ||= begin
-        restore_options = nil
-
-        if File.exist?("./config/database.yml")
-          if development_config = YAML::load(IO.read("./config/database.yml"))["development"]
-            restore_options = "--host=#{development_config['host']} --dbname=#{development_config['database']}"
-
-            if username = development_config["username"]
-              restore_options += " --username=#{username}"
-            end
-
-            if port = development_config["port"]
-              restore_options += " --port=#{port}"
-            end
-          else
-            puts "Missing database.yml config for development environment"
-          end
-        else
-          puts "Missing file config/database.yml"
-        end
-
-        restore_options
       end
     end
 

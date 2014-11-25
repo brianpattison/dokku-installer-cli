@@ -1,0 +1,5 @@
+require_relative "dokku_installer/config"
+require_relative "dokku_installer/domains"
+require_relative "dokku_installer/postgres"
+require_relative "dokku_installer/ssl"
+require_relative "dokku_installer/version"
