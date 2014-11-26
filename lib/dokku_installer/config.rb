@@ -19,12 +19,16 @@ module DokkuInstaller
       args = args.map{|arg|
         key_value = arg.split("=")
         if key_value.length == 2
-          user = "root" if key_value[1].index(" ")
-          return_value  = "#{key_value[0]}="
-          return_value += '\"'
-          return_value += key_value[1].gsub(/"|'/, "")
-          return_value += '\"'
-          return_value
+          if key_value[1].index(" ")
+            user = "root"
+            return_value  = "#{key_value[0]}="
+            return_value += '\"'
+            return_value += key_value[1].gsub(/"|'/, "")
+            return_value += '\"'
+            return_value
+          else
+            "#{key_value[0]}=#{key_value[1].gsub(/"|'/, "")}"
+          end
         else
           arg
         end
