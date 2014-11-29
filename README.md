@@ -34,8 +34,9 @@ Commands:
   dokku restart                                   # Restart the application
   dokku run <cmd>                                 # Run a command in the environment of the application
   dokku ssh                                       # Start an SSH session as root user
-  dokku ssl:certificate <file path>               # Add a signed certificate for SSL (server.crt)
-  dokku ssl:key <file path>                       # Add a private key for SSL (server.key)
+  dokku ssl:add CRT KEY                           # Add an SSL endpoint.
+  dokku ssl:force DOMAIN                          # Force SSL on the given domain.
+  dokku ssl:remove                                # Remove an SSL endpoint.
   dokku url                                       # Show the URL for the application
   dokku version                                   # Show dokku-installer-cli's version
 ```

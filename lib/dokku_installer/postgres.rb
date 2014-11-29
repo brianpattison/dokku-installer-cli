@@ -17,7 +17,15 @@ module DokkuInstaller
 
     desc "postgres:backups:create", "Create a new PostgreSQL backup"
     def postgres_backups_create
-      run_command "postgres:backups:create #{app_name}"
+      command = "ssh -t dokku@#{domain} postgres:backups:create #{app_name}"
+      puts "Running #{command}..."
+      result = `#{command}`
+
+      if result.include?("database dumped")
+        puts "Database backup created successfully."
+      else
+        puts "Database backup could not be created."
+      end
     end
 
     desc "postgres:backups:disable", "Disable daily PostgreSQL backups"
@@ -40,7 +48,9 @@ module DokkuInstaller
 
     desc "postgres:backups:enable", "Enable daily PostgreSQL backups"
     def postgres_backups_enable
-      run_command "postgres:backups:enable #{app_name}"
+      command = "ssh -t root@#{domain} \"dokku postgres:backups:enable #{app_name} && service cron restart\""
+      puts "Running #{command}..."
+      exec(command)
     end
 
     desc "postgres:backups:restore:local <number>", "Restore the numbered PostgreSQL backup locally"
