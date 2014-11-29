@@ -1,7 +1,5 @@
 #!/usr/bin/env ruby
 
-require "json"
-require "net/http"
 require "thor"
 require "YAML"
 require_relative "../lib/dokku_installer"

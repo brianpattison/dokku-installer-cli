@@ -1,3 +1,7 @@
+require "json"
+require "net/http"
+require "thor"
+
 module DokkuInstaller
   VERSION = "0.1.2"
 
