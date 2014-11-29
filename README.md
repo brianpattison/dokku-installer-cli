@@ -37,8 +37,10 @@ Commands:
   dokku ssl:add CRT KEY                           # Add an SSL endpoint.
   dokku ssl:force DOMAIN                          # Force SSL on the given domain.
   dokku ssl:remove                                # Remove an SSL endpoint.
+  dokku update                                    # Update dokku-installer-cli to latest version
+  dokku upgrade                                   # Upgrade the Dokku install on your remote server
   dokku url                                       # Show the URL for the application
-  dokku version                                   # Show dokku-installer-cli's version
+  dokku version                                   # Show version information
 ```
 
 ## Contributing
