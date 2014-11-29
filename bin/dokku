@@ -1,5 +1,7 @@
 #!/usr/bin/env ruby
 
+require "json"
+require "net/http"
 require "thor"
 require "YAML"
 require_relative "../lib/dokku_installer"
@@ -51,11 +53,6 @@ module DokkuInstaller
     desc "url", "Show the URL for the application"
     def url
       puts "http://#{app_name}.#{domain}"
-    end
-
-    desc "version", "Show dokku-installer-cli's version"
-    def version
-      puts "Dokku Installer CLI #{DokkuInstaller::VERSION}"
     end
 
     def help(method = nil)

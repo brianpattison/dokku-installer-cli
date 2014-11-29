@@ -1,14 +1,6 @@
 module DokkuInstaller
   class Cli < Thor
 
-    # certs:add CRT KEY            #  Add an ssl endpoint to an app.
-    # certs:chain CRT [CRT ...]    #  Print the ordered and complete chain for the given certificate.
-    # certs:info                   #  Show certificate information for an ssl endpoint.
-    # certs:key CRT KEY [KEY ...]  #  Print the correct key for the given certificate.
-    # certs:remove                 #  Remove an SSL Endpoint from an app.
-    # certs:rollback               #  Rollback an SSL Endpoint for an app.
-    # certs:update CRT KEY         #  Update an SSL Endpoint on an app.
-
     desc "ssl:add CRT KEY", "Add an SSL endpoint."
     def ssl_add(*args)
       key = nil
