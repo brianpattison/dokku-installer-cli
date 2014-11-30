@@ -24,7 +24,7 @@ module DokkuInstaller
     end
 
     desc "restart", "Restart the application"
-    def restart(*args)
+    def restart
       run_command "restart #{app_name}"
     end
 
@@ -72,23 +72,6 @@ module DokkuInstaller
 
     def app_name
       @app_name ||= git_config_match[2]
-    end
-
-    def backup_filename(number)
-      # Make sure the number is valid or use 1
-      number = number.to_s.gsub(/\D/, "").to_i
-      number = 1 if number < 1
-
-      # Get the file name for the numbered backup
-      puts "Getting list of backups..."
-      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
-      backups = `#{command}`
-      index = number - 1
-      if filename = backups.split("\n").reverse[index]
-        filename.strip
-      else
-        nil
-      end
     end
 
     def domain

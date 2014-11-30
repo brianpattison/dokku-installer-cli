@@ -40,8 +40,7 @@ module DokkuInstaller
     end
 
     desc "ssl:force DOMAIN", "Force SSL on the given domain."
-    def ssl_force(*args)
-      domain = args.first
+    def ssl_force(domain = nil)
       if domain.nil?
         puts "Specify a domain to force SSL."
         exit

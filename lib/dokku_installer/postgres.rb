@@ -1,17 +1,17 @@
 module DokkuInstaller
   class Cli < Thor
 
-    desc "postgres:backups", "List available PostgreSQL backups"
+    desc "postgres:backups", "List available PostgreSQL backups as a numbered list"
     def postgres_backups
       command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
       puts "Running #{command}..."
       backups = `#{command}`
-      backups.split("\n").reverse.each_with_index do |line, index|
+      backups.split("\n").select{|backup| backup != "" }.reverse.each_with_index do |line, index|
         number = "#{index + 1}"
         if number.length < 2
           number = " #{number}"
         end
-        puts "#{number}. #{line}"
+        puts "[#{number}] #{line}"
       end
     end
 
@@ -34,8 +34,8 @@ module DokkuInstaller
     end
 
     desc "postgres:backups:download <number>", "Download the numbered PostgreSQL backup"
-    def postgres_backups_download(*args)
-      number = args.first ? args.first : 1
+    def postgres_backups_download(number = nil)
+      number ||= 1
 
       if backup = backup_filename(number)
         command = "postgres:backups:download #{app_name} #{backup} > #{backup}"
@@ -53,10 +53,25 @@ module DokkuInstaller
       exec(command)
     end
 
-    desc "postgres:backups:restore:local <number>", "Restore the numbered PostgreSQL backup locally"
-    def postgres_backups_restore_local(*args)
+    desc "postgres:backups:restore <number>", "Restore a numbered PostgreSQL backup"
+    def postgres_backups_restore(number = nil)
+      if number.nil?
+        puts "You must specify a numbered backup."
+        exit
+      end
+
+      if backup = backup_filename(number)
+        command = "postgres:backups:restore #{app_name} #{backup}"
+        run_command(command)
+      else
+        puts "Invalid backup number"
+      end
+    end
+
+    desc "postgres:backups:restore:local <number>", "Restore a numbered PostgreSQL backup locally"
+    def postgres_backups_restore_local(number = nil)
       # Download the backup file
-      number = args.first ? args.first : 1
+      number ||= 1
 
       if backup = backup_filename(number)
         command = "ssh -t dokku@#{domain} postgres:backups:download #{app_name} #{backup} > #{backup}"
@@ -75,7 +90,36 @@ module DokkuInstaller
       end
     end
 
+    desc "postgres:export <file.sql>", "Export Postgres data to local file"
+    def postgres_export(file = "export.sql")
+      command = "postgres:dump #{app_name} > #{file}"
+      run_command(command)
+    end
+
+    desc "postgres:import <file.sql>", "Restore database data from a local file"
+    def postgres_import(file)
+      command = "postgres:restore #{app_name} < #{file}"
+      run_command(command)
+    end
+
   private
+
+    def backup_filename(number)
+      # Make sure the number is valid or use 1
+      number = number.to_s.gsub(/\D/, "").to_i
+      number = 1 if number < 1
+
+      # Get the file name for the numbered backup
+      puts "Getting list of backups..."
+      command = "ssh -t dokku@#{domain} postgres:backups #{app_name}"
+      backups = `#{command}`
+      index = number - 1
+      if filename = backups.split("\n").select{|backup| backup != "" }.reverse[index]
+        filename.strip
+      else
+        nil
+      end
+    end
 
     def psql_options
       @psql_options ||= begin

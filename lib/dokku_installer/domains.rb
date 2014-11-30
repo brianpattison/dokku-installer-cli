@@ -2,7 +2,7 @@ module DokkuInstaller
   class Cli < Thor
 
     desc "domains", "Display the app's domains"
-    def domains(*args)
+    def domains
       run_command "domains #{app_name}"
     end
 

@@ -7,8 +7,8 @@ module DokkuInstaller
     end
 
     desc "config:get KEY", "Display an environment variable value"
-    def config_get(*args)
-      run_command "config:get #{app_name} #{args.first}"
+    def config_get(key)
+      run_command "config:get #{app_name} #{key}"
     end
 
     desc "config:set KEY1=VALUE1 [KEY2=VALUE2 ...]", "Set one or more environment variables"
