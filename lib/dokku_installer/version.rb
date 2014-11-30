@@ -3,7 +3,7 @@ require "net/http"
 require "thor"
 
 module DokkuInstaller
-  VERSION = "0.1.2"
+  VERSION = "0.1.3"
 
   class Cli < Thor
 
