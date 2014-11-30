@@ -21,7 +21,7 @@ module DokkuInstaller
       puts "Running #{command}..."
       result = `#{command}`
 
-      if result.include?("database dumped")
+      if result.include?("Backup created")
         puts "Database backup created successfully."
       else
         puts "Database backup could not be created."
