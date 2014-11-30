@@ -25,12 +25,15 @@ Commands:
   dokku help [COMMAND]                            # Describe available commands or one specific command
   dokku logs [-t]                                 # Show the last logs for the application (-t follows)
   dokku open                                      # Open the application in your default browser
-  dokku postgres:backups                          # List available PostgreSQL backups
+  dokku postgres:backups                          # List available PostgreSQL backups as a numbered list
   dokku postgres:backups:create                   # Create a new PostgreSQL backup
   dokku postgres:backups:disable                  # Disable daily PostgreSQL backups
   dokku postgres:backups:download <number>        # Download the numbered PostgreSQL backup
   dokku postgres:backups:enable                   # Enable daily PostgreSQL backups
-  dokku postgres:backups:restore:local <number>   # Restore the numbered PostgreSQL backup locally
+  dokku postgres:backups:restore <number>         # Restore a numbered PostgreSQL backup
+  dokku postgres:backups:restore:local <number>   # Restore a numbered PostgreSQL backup locally
+  dokku postgres:export <file.sql>                # Export Postgres data to local file
+  dokku postgres:import <file.sql>                # Restore database data from a local file
   dokku restart                                   # Restart the application
   dokku run <cmd>                                 # Run a command in the environment of the application
   dokku ssh                                       # Start an SSH session as root user
